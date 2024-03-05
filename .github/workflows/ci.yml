@@ -53,10 +53,10 @@ jobs:
           git config --global user.email "atlasbot@nimlang.com"
           git config --global user.name "atlasbot"
 
-      - name: Checkout atlas
+      - name: Checkout sat
         uses: actions/checkout@v4
         with:
-          path: atlas
+          path: sat
           submodules: false
 
       - name: Restore MinGW-W64 (Windows) from cache
