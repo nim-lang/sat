@@ -9,7 +9,7 @@
 import satvars
 
 const MaxDefaultIterations: int =
-  when defined(debug): 1990 # lower than nim debug recursion limit
+  when defined(debug): 1700 # lower than nim debug recursion limit
   else: 50_000 # total guesswork
 
 type
