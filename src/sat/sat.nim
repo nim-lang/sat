@@ -409,7 +409,7 @@ proc trivialVars(f: Formular; n: FormPos; val: uint64; sol: var Solution) =
             if ch.int != trueAt:
               sol.setVar(v, SetToFalse or sol.getVar(v))
 
-proc satisfiable(f: Formular; sout: var Solution; cnt, maxIters: int): bool  =
+proc satisfiableIter(f: Formular; sout: var Solution; cnt, maxIters: int): bool  =
   if cnt >= maxIters:
     raise newException(SatOverflowError, "maximum number of " & $cnt & " iterations exceeded")
 
@@ -436,7 +436,7 @@ proc satisfiable(f: Formular; sout: var Solution; cnt, maxIters: int): bool  =
     if res == TrueForm:
       result = true
     else:
-      result = satisfiable(falseGuess, s, cnt + 1, maxIters)
+      result = satisfiableIter(falseGuess, s, cnt + 1, maxIters)
       if not result:
         s.setVar(v, SetToTrue)
 
@@ -446,7 +446,7 @@ proc satisfiable(f: Formular; sout: var Solution; cnt, maxIters: int): bool  =
         if res == TrueForm:
           result = true
         else:
-          result = satisfiable(trueGuess, s, cnt + 1, maxIters)
+          result = satisfiableIter(trueGuess, s, cnt + 1, maxIters)
           #if not result:
           # Revert the assignment after trying the second option
           #  s.setVar(v, prevValue)
@@ -456,7 +456,7 @@ proc satisfiable(f: Formular; sout: var Solution; cnt, maxIters: int): bool  =
 proc satisfiable*(f: Formular; sout: var Solution;
                   maxIters: int = MaxDefaultIterations): bool {.raises: [SatOverflowError].} =
   ## Determines if the SAT problem given in the given Formular `f` is satisfiable.
-  satisfiable(f, sout, cnt = 1, maxIters = maxIters)
+  satisfiableIter(f, sout, cnt = 1, maxIters = maxIters)
 
 type
   Space = seq[Solution]
