@@ -34,10 +34,13 @@ suite "sat tests":
 
     let m = maxVariable(f)
     var s = createSolution(m)
-    echo "is solvable? ", satisfiable(f, s)
+    let res = satisfiable(f, s)
+    check res == false
+    echo "is solvable? ", res
     echo "solution"
     for i in 0..<m:
       echo "v", i, " ", s.getVar(VarId(i))
+      check s.getVar(VarId(i)) == 0
 
   test "test2":
     var b: Builder
