@@ -18,8 +18,8 @@ type
   Atom = distinct BaseType
   Formular* = seq[Atom] # linear storage
   SatResult* = enum
-    Unsatisfiable,
-    Satisfiable,
+    Unsatisfied,
+    Satisfied,
     MaxIterationLimitError
 
 const
@@ -419,17 +419,17 @@ proc satisfiableIter(f: Formular; sout: var Solution; cnt, maxIters: int): SatRe
   let v = freeVariable(f)
   if v == NoVar:
     if f[0].kind == TrueForm:
-      result = Satisfiable
+      result = Satisfied
     else:
-      result = Unsatisfiable
+      result = Unsatisfied
   else:
     var s = sout
     trivialVars(f, FormPos(0), SetToTrue, s)
     if containsInvalid(s):
       sout = s
-      return Unsatisfiable
+      return Unsatisfied
 
-    result = Unsatisfiable
+    result = Unsatisfied
     # We have a variable to guess.
     # Construct the two guesses.
     # Return whether either one of them works.
@@ -440,23 +440,23 @@ proc satisfiableIter(f: Formular; sout: var Solution; cnt, maxIters: int): SatRe
     let res = simplify(falseGuess, f, FormPos 0, s)
 
     if res == TrueForm:
-      result = Satisfiable
+      result = Satisfied
     else:
       result = satisfiableIter(falseGuess, s, cnt + 1, maxIters)
-      if result != Satisfiable:
+      if result != Satisfied:
         s.setVar(v, SetToTrue)
 
         var trueGuess: Formular
         let res = simplify(trueGuess, f, FormPos 0, s)
 
         if res == TrueForm:
-          result = Satisfiable
+          result = Satisfied
         else:
           result = satisfiableIter(trueGuess, s, cnt + 1, maxIters)
           #if not result:
           # Revert the assignment after trying the second option
           #  s.setVar(v, prevValue)
-    if result == Satisfiable:
+    if result == Satisfied:
       sout = s
 
 proc satisfiable*(f: Formular; sout: var Solution;
