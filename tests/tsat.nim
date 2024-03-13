@@ -142,13 +142,17 @@ suite "sat tests":
     echo f
 
     var s = createSolution(f)
-    echo "is solvable? ", satisfiable(f, s)
+    let res = satisfiable(f, s)
+    echo "is solvable? ", res
+    check res == true
 
     echo "SOLUTION"
+    let expected = {0 ,1 ,2 ,14 ,29 ,32 ,33 ,59 ,63 ,75 ,76 ,78 ,156 ,173 ,189 ,202 ,204 ,210 ,211 ,212 ,215 ,217}
     let max = maxVariable(f)
     for i in 0..<max:
       if s.getVar(VarId(i)) == SetToTrue:
         echo "v", i
+        check i in expected
 
     echo "REALLY? ", eval(f, s)
 
