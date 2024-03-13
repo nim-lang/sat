@@ -13,11 +13,14 @@ const MaxDefaultIterations: int =
   else: 50_000 # total guesswork
 
 type
-  SatOverflowError* = object of CatchableError
   FormKind* = enum
     FalseForm, TrueForm, VarForm, NotForm, AndForm, OrForm, ExactlyOneOfForm, ZeroOrOneOfForm # 8 so the last 3 bits
   Atom = distinct BaseType
   Formular* = seq[Atom] # linear storage
+  SatResult* = enum
+    Unsatisfiable,
+    Satisfiable,
+    MaxIterationLimitError
 
 const
   KindBits = 3
@@ -409,21 +412,24 @@ proc trivialVars(f: Formular; n: FormPos; val: uint64; sol: var Solution) =
             if ch.int != trueAt:
               sol.setVar(v, SetToFalse or sol.getVar(v))
 
-proc satisfiable(f: Formular; sout: var Solution; cnt, maxIters: int): bool  =
+proc satisfiableIter(f: Formular; sout: var Solution; cnt, maxIters: int): SatResult =
   if cnt >= maxIters:
-    raise newException(SatOverflowError, "maximum number of " & $cnt & " iterations exceeded")
+    return SatResult.MaxIterationLimitError
 
   let v = freeVariable(f)
   if v == NoVar:
-    result = f[0].kind == TrueForm
+    if f[0].kind == TrueForm:
+      result = Satisfiable
+    else:
+      result = Unsatisfiable
   else:
     var s = sout
     trivialVars(f, FormPos(0), SetToTrue, s)
     if containsInvalid(s):
       sout = s
-      return false
+      return Unsatisfiable
 
-    result = false
+    result = Unsatisfiable
     # We have a variable to guess.
     # Construct the two guesses.
     # Return whether either one of them works.
@@ -434,29 +440,29 @@ proc satisfiable(f: Formular; sout: var Solution; cnt, maxIters: int): bool  =
     let res = simplify(falseGuess, f, FormPos 0, s)
 
     if res == TrueForm:
-      result = true
+      result = Satisfiable
     else:
-      result = satisfiable(falseGuess, s, cnt + 1, maxIters)
-      if not result:
+      result = satisfiableIter(falseGuess, s, cnt + 1, maxIters)
+      if result != Satisfiable:
         s.setVar(v, SetToTrue)
 
         var trueGuess: Formular
         let res = simplify(trueGuess, f, FormPos 0, s)
 
         if res == TrueForm:
-          result = true
+          result = Satisfiable
         else:
-          result = satisfiable(trueGuess, s, cnt + 1, maxIters)
+          result = satisfiableIter(trueGuess, s, cnt + 1, maxIters)
           #if not result:
           # Revert the assignment after trying the second option
           #  s.setVar(v, prevValue)
-    if result:
+    if result == Satisfiable:
       sout = s
 
 proc satisfiable*(f: Formular; sout: var Solution;
-                  maxIters: int = MaxDefaultIterations): bool {.raises: [SatOverflowError].} =
+                  maxIters: int = MaxDefaultIterations): SatResult =
   ## Determines if the SAT problem given in the given Formular `f` is satisfiable.
-  satisfiable(f, sout, cnt = 1, maxIters = maxIters)
+  satisfiableIter(f, sout, cnt = 1, maxIters = maxIters)
 
 type
   Space = seq[Solution]
