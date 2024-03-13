@@ -77,10 +77,15 @@ suite "sat tests":
 
     let m = maxVariable(f)
     var s = createSolution(m)
-    echo "is solvable? ", satisfiable(f, s)
+    let res = satisfiable(f, s)
+    check res == true
+    echo "is solvable? ", res
+    let expected = @[ 0'u64, 1, 0, 0, 0, 2, 1, 2, 2, 2]
     echo "solution"
     for i in 0..<m:
-      echo "v", i, " ", s.getVar(VarId(i))
+      let v = s.getVar(VarId(i))
+      echo "v", i, " ", v
+      check v == expected[i]
 
   const
     myFormularU = """(&v0 v1 (~v5) (<->v0 (1==v6)) (<->v1 (1==v7 v8)) (<->v2 (1==v9 v10)) (<->v3 (1==v11)) (<->v4 (1==v12 v13)) (<->v14 (1==v8 v7)) (<->v15 (1==v9)) (<->v16 (1==v10 v9)) (<->v17 (1==v11)) (<->v18 (1==v11)) (<->v19 (1==v13)) (|(~v6) v14) (|(~v7) v15) (|(~v8) v16) (|(~v9) v17) (|(~v10) v18) (|(~v11) v19) (|(~v12) v20))"""
