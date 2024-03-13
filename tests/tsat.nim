@@ -35,7 +35,7 @@ suite "sat tests":
     let m = maxVariable(f)
     var s = createSolution(m)
     let res = satisfiable(f, s)
-    check res == false
+    check res == Unsatisfiable
     echo "is solvable? ", res
     echo "solution"
     for i in 0..<m:
@@ -78,7 +78,7 @@ suite "sat tests":
     let m = maxVariable(f)
     var s = createSolution(m)
     let res = satisfiable(f, s)
-    check res == true
+    check res == Satisfiable
     echo "is solvable? ", res
     let expected = @[ 0'u64, 1, 0, 0, 0, 2, 1, 2, 2, 2]
     echo "solution"
@@ -144,7 +144,7 @@ suite "sat tests":
     var s = createSolution(f)
     let res = satisfiable(f, s)
     echo "is solvable? ", res
-    check res == true
+    check res == Satisfiable
 
     echo "SOLUTION"
     let expected = {0 ,1 ,2 ,14 ,29 ,32 ,33 ,59 ,63 ,75 ,76 ,78 ,156 ,173 ,189 ,202 ,204 ,210 ,211 ,212 ,215 ,217}
