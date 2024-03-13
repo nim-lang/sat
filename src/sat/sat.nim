@@ -414,7 +414,7 @@ proc trivialVars(f: Formular; n: FormPos; val: uint64; sol: var Solution) =
 
 proc satisfiableIter(f: Formular; sout: var Solution; cnt, maxIters: int): SatResult =
   if cnt >= maxIters:
-    return SatResult.MaxIterationLimitError
+    return MaxIterationLimitError
 
   let v = freeVariable(f)
   if v == NoVar:
@@ -443,7 +443,9 @@ proc satisfiableIter(f: Formular; sout: var Solution; cnt, maxIters: int): SatRe
       result = Satisfied
     else:
       result = satisfiableIter(falseGuess, s, cnt + 1, maxIters)
-      if result != Satisfied:
+      if result == MaxIterationLimitError:
+        return
+      elif result != Satisfied:
         s.setVar(v, SetToTrue)
 
         var trueGuess: Formular
@@ -453,6 +455,8 @@ proc satisfiableIter(f: Formular; sout: var Solution; cnt, maxIters: int): SatRe
           result = Satisfied
         else:
           result = satisfiableIter(trueGuess, s, cnt + 1, maxIters)
+          if result == MaxIterationLimitError:
+            return
           #if not result:
           # Revert the assignment after trying the second option
           #  s.setVar(v, prevValue)
