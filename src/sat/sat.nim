@@ -13,6 +13,7 @@ const MaxDefaultIterations: int =
   else: 50_000 # total guesswork
 
 type
+  SatOverflowError* = object of CatchableError
   FormKind* = enum
     FalseForm, TrueForm, VarForm, NotForm, AndForm, OrForm, ExactlyOneOfForm, ZeroOrOneOfForm # 8 so the last 3 bits
   Atom = distinct BaseType
@@ -459,10 +460,12 @@ proc satisfiableIter(f: Formular; sout: var Solution; iters: var int): bool =
       sout = s
 
 proc satisfiable*(f: Formular; sout: var Solution;
-                  maxIters: int = MaxDefaultIterations): bool =
+                  maxIters: int = MaxDefaultIterations): bool {.raises: [SatOverflowError].} =
   ## Determines if the SAT problem given in the given Formular `f` is satisfiable.
   var iters = maxIters
-  satisfiableIter(f, sout, iters)
+  result = satisfiableIter(f, sout, iters)
+  if iters == 0:
+    raise newException(SatOverflowError, "SAT iteration limit exceeded")
 
 type
   Space = seq[Solution]
