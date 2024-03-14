@@ -8,7 +8,12 @@
 
 import satvars
 
+const MaxDefaultIterations: int =
+  when defined(debug): 1700 # lower than nim debug recursion limit
+  else: 50_000 # total guesswork
+
 type
+  SatOverflowError* = object of CatchableError
   FormKind* = enum
     FalseForm, TrueForm, VarForm, NotForm, AndForm, OrForm, ExactlyOneOfForm, ZeroOrOneOfForm # 8 so the last 3 bits
   Atom = distinct BaseType
@@ -404,7 +409,11 @@ proc trivialVars(f: Formular; n: FormPos; val: uint64; sol: var Solution) =
             if ch.int != trueAt:
               sol.setVar(v, SetToFalse or sol.getVar(v))
 
-proc satisfiable*(f: Formular; sout: var Solution): bool =
+proc satisfiableIter(f: Formular; sout: var Solution; iters: var int): bool =
+  if iters == 0:
+    return false
+  dec iters
+
   let v = freeVariable(f)
   if v == NoVar:
     result = f[0].kind == TrueForm
@@ -428,7 +437,10 @@ proc satisfiable*(f: Formular; sout: var Solution): bool =
     if res == TrueForm:
       result = true
     else:
-      result = satisfiable(falseGuess, s)
+      result = satisfiableIter(falseGuess, s, iters)
+      if iters == 0:
+        return false
+
       if not result:
         s.setVar(v, SetToTrue)
 
@@ -438,12 +450,22 @@ proc satisfiable*(f: Formular; sout: var Solution): bool =
         if res == TrueForm:
           result = true
         else:
-          result = satisfiable(trueGuess, s)
+          result = satisfiableIter(trueGuess, s, iters)
+          if iters == 0:
+            return
           #if not result:
           # Revert the assignment after trying the second option
           #  s.setVar(v, prevValue)
     if result:
       sout = s
+
+proc satisfiable*(f: Formular; sout: var Solution;
+                  maxIters: int = MaxDefaultIterations): bool {.raises: [SatOverflowError].} =
+  ## Determines if the SAT problem given in the given Formular `f` is satisfiable.
+  var iters = maxIters
+  result = satisfiableIter(f, sout, iters)
+  if iters == 0:
+    raise newException(SatOverflowError, "SAT iteration limit exceeded")
 
 type
   Space = seq[Solution]
