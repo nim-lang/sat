@@ -9,7 +9,7 @@
 import satvars
 
 const MaxDefaultIterations: int =
-  when defined(debug): 1700 # lower than nim debug recursion limit
+  when defined(debug): 10_000 # lower than nim debug recursion limit
   else: 50_000 # total guesswork
 
 type
@@ -409,6 +409,7 @@ proc trivialVars(f: Formular; n: FormPos; val: uint64; sol: var Solution) =
             if ch.int != trueAt:
               sol.setVar(v, SetToFalse or sol.getVar(v))
 
+{.push stackTrace:off.}
 proc satisfiableIter(f: Formular; sout: var Solution; iters: var int): bool =
   if iters == 0:
     return false
@@ -458,6 +459,7 @@ proc satisfiableIter(f: Formular; sout: var Solution; iters: var int): bool =
           #  s.setVar(v, prevValue)
     if result:
       sout = s
+{.push stackTrace:on.}
 
 proc satisfiable*(f: Formular; sout: var Solution;
                   maxIters: int = MaxDefaultIterations): bool {.raises: [SatOverflowError].} =
