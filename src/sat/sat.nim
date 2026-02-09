@@ -430,23 +430,20 @@ proc satisfiableIter(f: Formular; sout: var Solution; iters: var int): bool =
     # Construct the two guesses.
     # Return whether either one of them works.
     let branchBase = s
-
-    var falseState = branchBase
-    falseState.setVar(v, SetToFalse)
+    s.setVar(v, SetToFalse)
 
     var falseGuess: Formular
-    let falseRes = simplify(falseGuess, f, FormPos 0, falseState)
+    let falseRes = simplify(falseGuess, f, FormPos 0, s)
 
     if falseRes == TrueForm:
       result = true
-      s = falseState
     else:
-      result = satisfiableIter(falseGuess, falseState, iters)
+      result = satisfiableIter(falseGuess, s, iters)
       if iters == 0:
         return false
 
       if result:
-        s = falseState
+        s = s
       else:
         var trueState = branchBase
         trueState.setVar(v, SetToTrue)
