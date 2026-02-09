@@ -1,6 +1,8 @@
 import std/unittest
 import sat/[sat, satvars]
 
+const StateLeakFormulaText = "(&(1>=v0) (1==v1) (|(~v1) v0))"
+
 proc buildStateLeakFormula(): Formular =
   ## This formula is satisfiable with v0=true, v1=true.
   ## It previously triggered a false UNSAT in the fast solver due to
@@ -28,6 +30,7 @@ proc buildStateLeakFormula(): Formular =
 suite "sat solver state isolation":
   test "fast solver keeps guess branches isolated":
     let f = buildStateLeakFormula()
+    check $f == StateLeakFormulaText
 
     var fast = createSolution(maxVariable(f))
     let fastSat = satisfiable(f, fast)
@@ -39,4 +42,3 @@ suite "sat solver state isolation":
     check fastSat
     check slowSat == fastSat
     check eval(f, fast)
-
