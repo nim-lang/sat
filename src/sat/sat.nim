@@ -442,9 +442,7 @@ proc satisfiableIter(f: Formular; sout: var Solution; iters: var int): bool =
       if iters == 0:
         return false
 
-      if result:
-        s = s
-      else:
+      if not result:
         var trueState = branchBase
         trueState.setVar(v, SetToTrue)
 
