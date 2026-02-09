@@ -429,13 +429,13 @@ proc satisfiableIter(f: Formular; sout: var Solution; iters: var int): bool =
     # We have a variable to guess.
     # Construct the two guesses.
     # Return whether either one of them works.
-    let prevValue = s.getVar(v)
+    let branchBase = s
     s.setVar(v, SetToFalse)
 
     var falseGuess: Formular
-    let res = simplify(falseGuess, f, FormPos 0, s)
+    let falseRes = simplify(falseGuess, f, FormPos 0, s)
 
-    if res == TrueForm:
+    if falseRes == TrueForm:
       result = true
     else:
       result = satisfiableIter(falseGuess, s, iters)
@@ -443,20 +443,21 @@ proc satisfiableIter(f: Formular; sout: var Solution; iters: var int): bool =
         return false
 
       if not result:
-        s.setVar(v, SetToTrue)
+        var trueState = branchBase
+        trueState.setVar(v, SetToTrue)
 
         var trueGuess: Formular
-        let res = simplify(trueGuess, f, FormPos 0, s)
+        let trueRes = simplify(trueGuess, f, FormPos 0, trueState)
 
-        if res == TrueForm:
+        if trueRes == TrueForm:
           result = true
+          s = trueState
         else:
-          result = satisfiableIter(trueGuess, s, iters)
+          result = satisfiableIter(trueGuess, trueState, iters)
           if iters == 0:
             return
-          #if not result:
-          # Revert the assignment after trying the second option
-          #  s.setVar(v, prevValue)
+          if result:
+            s = trueState
     if result:
       sout = s
 {.push stackTrace:on.}
